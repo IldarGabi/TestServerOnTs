@@ -17,19 +17,21 @@ const generateAccessToken = (id: string, roles: string[]): string => {
 
 class AuthorizationController {
     // регистрация пользователя
-    async registration(request: Request, response: Response): Promise<any> {
+    async registration(request: Request, response: Response): Promise<void> {
         try {
             const validErrors = validationResult(request);
 
             if (!validErrors.isEmpty()) {
-                return response.status(400).json({ message: 'Error on registration', validErrors });
+                response.status(400).json({ message: 'Error on registration', validErrors });
+                return;
             }
 
             const { username, password } = request.body;
             const candidate = await Users.findOne({ username });
 
             if (candidate) {
-                return response.status(400).json({ message: `User with name: ${username} already exists` });
+                response.status(400).json({ message: `User with name: ${username} already exists` });
+                return;
             }
 
             const hashPassword = bcrypt.hashSync(password, 7);
@@ -38,45 +40,53 @@ class AuthorizationController {
 
             await user.save();
 
-            return response.json({ message: 'The user was successfully created' });
+            response.json({ message: 'The user was successfully created' });
+            return;
         } catch (error) {
             console.error(error);
-            return response.status(500).json({ message: 'Registration completed with error', error });
+            response.status(500).json({ message: 'Registration completed with error', error });
+            return; 
         }
     }
 
     // логин пользователя
-    async login(request: Request, response: Response): Promise<any> {
+    async login(request: Request, response: Response): Promise<void> {
         try {
             const { username, password } = request.body;
             const user: IUser | null = await Users.findOne({ username });
 
             if (!user) {
-                return response.status(400).json({ message: `User ${username} was not found` });
+                response.status(400).json({ message: `Incorrect password or username` });
+                return;
             }
 
             const validPassword = bcrypt.compareSync(password, user.password);
 
             if (!validPassword) {
-                return response.status(400).json({ message: `Incorrect password or username` });
+                response.status(400).json({ message: `Incorrect password or username` });
+                return;
             }
 
             const token = generateAccessToken(user._id.toString(), user.roles);
-            return response.json({ token });
+            response.json({ token });
+            return;
         } catch (error) {
             console.error(error);
-            return response.status(500).json({ message: 'Login completed with error' });
+            response.status(500).json({ message: 'Login completed with error' });
+            return;
         }
     }
 
     // получение списка пользоваателей из БД
-    async getUsers(request: Request, response: Response): Promise<any> {
+    async getUsers(request: Request, response: Response): Promise<void> {
         try {
             const users = await Users.find();
-            return response.json(users);
+            response.json(users);
+            return;
         } catch (error) {
             console.error(error);
-            return response.status(500).json({ message: 'Error fetching users', error });
+            response.status(500).json({ message: 'Error fetching users', error });
+            return;
         }
     }
 }

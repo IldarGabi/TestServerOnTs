@@ -11,7 +11,7 @@ declare global {
     }
 }
 
-async function authMiddleware(request: Request, response: Response, next: NextFunction): Promise<any> {
+async function authMiddleware(request: Request, response: Response, next: NextFunction): Promise<void> {
     if (request.method === "OPTIONS") {
         return next();
     }
@@ -20,7 +20,8 @@ async function authMiddleware(request: Request, response: Response, next: NextFu
         const token = request.headers.authorization?.split(' ')[1];
 
         if(!token) {
-            return response.status(403).json({message: 'The user is not logged in'})
+            response.status(403).json({message: 'The user is not logged in'})
+            return;
         }
 
         // добавление данных пользователя в объект запроса
@@ -28,7 +29,8 @@ async function authMiddleware(request: Request, response: Response, next: NextFu
         next();
     } catch (error) {
         console.log(error);
-        return response.status(403).json({message: 'The user is not logged in'})
+        response.status(403).json({message: 'The user is not logged in'})
+        return;
     }
 }
 
